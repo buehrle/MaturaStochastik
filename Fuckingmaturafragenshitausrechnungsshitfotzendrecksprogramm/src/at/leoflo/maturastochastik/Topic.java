@@ -1,4 +1,4 @@
-package at.leoflo.fuckingmaturafragenshitausrechnungsshitfotzendrecksprogramm;
+package at.leoflo.maturastochastik;
 
 public class Topic {
 	private String name;

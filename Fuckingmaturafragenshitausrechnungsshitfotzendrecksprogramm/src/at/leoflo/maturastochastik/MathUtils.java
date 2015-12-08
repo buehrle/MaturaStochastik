@@ -1,4 +1,4 @@
-package at.leoflo.fuckingmaturafragenshitausrechnungsshitfotzendrecksprogramm;
+package at.leoflo.maturastochastik;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -40,7 +40,7 @@ public class MathUtils {
 		}
 		
 		for (Topic t : topics) {
-			for ()
+
 		}
 	}
 }
