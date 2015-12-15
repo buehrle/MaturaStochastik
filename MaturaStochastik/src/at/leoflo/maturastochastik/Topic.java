@@ -4,10 +4,9 @@ public class Topic {
 	private String name;
 	private int popularity;
 	private int amountChosen;
-	private double percentage;
 	private int amountQuestions;
 	private int[] chosenPerIteration;
-	private int maxChosen;
+	private double percentage;
 	
 	public int getAmountQuestions() {
 		return amountQuestions;
@@ -17,21 +16,12 @@ public class Topic {
 		this.amountQuestions = amountQuestions;
 	}
 
-	public double getPercentage() {
-		return percentage;
-	}
-
-	public void setPercentage(double percentage) {
-		this.percentage = percentage;
-	}
-
 	public Topic(String name, int popularity) {
 		this.name = name;
 		this.popularity = popularity;
 		this.amountChosen = 0;
-		this.percentage = 0;
 		this.amountQuestions = 0;
-		this.maxChosen = 0;
+		this.percentage = 0;
 	}
 
 	public String getName() {
@@ -61,16 +51,20 @@ public class Topic {
 	public int[] getChosenPerIteration() {
 		return chosenPerIteration;
 	}
+	
+	public void incrementChosenPerIteration(int iteration, int incrementor) {
+		chosenPerIteration[iteration] = chosenPerIteration[iteration] + incrementor;
+	}
 
 	public void setChosenPerIteration(int[] chosenPerIteration) {
 		this.chosenPerIteration = chosenPerIteration;
 	}
 
-	public int getMaxChosen() {
-		return maxChosen;
+	public double getPercentage() {
+		return percentage;
 	}
 
-	public void setMaxChosen(int maxChosen) {
-		this.maxChosen = maxChosen;
+	public void setPercentage(double percentage) {
+		this.percentage = percentage;
 	}
 }

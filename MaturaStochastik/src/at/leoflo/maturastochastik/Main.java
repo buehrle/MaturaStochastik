@@ -1,8 +1,10 @@
 package at.leoflo.maturastochastik;
 
+import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -28,7 +30,7 @@ import net.miginfocom.swing.MigLayout;
 @SuppressWarnings("serial")
 public class Main extends JFrame implements KeyListener, ActionListener {
 	private static final String[] topicsColumnNames = {"Bezeichnung", "Beliebtheit"};
-	private static final String[] resultsColumnNames = {"Themenbereich", "Anzahl Fragen", "insgesamt Gezogen"};
+	private static final String[] resultsColumnNames = {"Themenbereich", "Anzahl Fragen", "insgesamt Gezogen", "Sicherheit"};
 	private DefaultTableModel topicsTableModel;
 	private DefaultTableModel resultsTableModel;
 	private JTable table;
@@ -57,7 +59,7 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); //make it look beautiful.
 		} catch (Exception e) {}
 		
-		setTitle("Stochastische Berechnung fÃ¼r die Verteilung der Maturafragen | HTL Dornbirn");
+		setTitle("Stochastische Berechnung für die Verteilung der Maturafragen | HTL Dornbirn");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
 		setSize(912, 414);
@@ -87,7 +89,7 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		getContentPane().add(dataContainer, BorderLayout.NORTH);
 		dataContainer.setLayout(new MigLayout("", "[][][][][][][][][][][grow][][][][][][][][][]", "[grow]"));
 		
-		JLabel lblAnzahlDerSchler = new JLabel("Anzahl SchÃ¼ler");
+		JLabel lblAnzahlDerSchler = new JLabel("Anzahl Schüler");
 		dataContainer.add(lblAnzahlDerSchler, "cell 0 0");
 		
 		spinner = new JSpinner();
@@ -95,7 +97,7 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		spinner.setMinimumSize(new Dimension(60, 0));
 		dataContainer.add(spinner, "cell 1 0");
 		
-		lblDurchgngegenauigkeit = new JLabel("DurchgÃ¤nge (Genauigkeit)");
+		lblDurchgngegenauigkeit = new JLabel("Durchgänge (Genauigkeit)");
 		dataContainer.add(lblDurchgngegenauigkeit, "cell 3 0");
 		
 		spinner_1 = new JSpinner();
@@ -107,7 +109,7 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		dataContainer.add(lblSicherheit, "cell 6 0");
 		
 		spinner_2 = new JSpinner();
-		spinner_2.setModel(new SpinnerNumberModel(70, 1, 100, 1));
+		spinner_2.setModel(new SpinnerNumberModel(70, 50, 100, 1));
 		dataContainer.add(spinner_2, "cell 7 0");
 		
 		label = new JLabel("%");
@@ -131,9 +133,10 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		table_1 = new JTable(resultsTableModel);
 		table_1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table_1.setEnabled(false);
-		table_1.getColumnModel().getColumn(0).setPreferredWidth(243);
-		table_1.getColumnModel().getColumn(1).setPreferredWidth(100);
+		table_1.getColumnModel().getColumn(0).setPreferredWidth(180);
+		table_1.getColumnModel().getColumn(1).setPreferredWidth(85);
 		table_1.getColumnModel().getColumn(2).setPreferredWidth(113);
+		table_1.getColumnModel().getColumn(3).setPreferredWidth(60);
 		table_1.setFillsViewportHeight(true);
 		table_1.setRowHeight(20);
 		scrollPane_1.setViewportView(table_1);
@@ -145,6 +148,9 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		if (table.getSelectedRow() != -1) {
 			if (e.getKeyCode() == 10 && table.getSelectedRow() == table.getRowCount() -1) { //ENTER
 				topicsTableModel.addRow(new Object[] {"", ""});
+				try {
+					new Robot().keyPress(KeyEvent.VK_LEFT);
+				} catch (AWTException e1) {}
 			} else if (e.getKeyCode() == 127) { //DEL
 				if (table.getRowCount() > 1) topicsTableModel.removeRow(table.getSelectedRow());
 			} else if (e.getKeyCode() == 8) { //BACK
@@ -182,12 +188,11 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 			
 			MathUtils.stochasticate(topics, (Integer) spinner.getValue(), (Integer) spinner_1.getValue(), (Integer) spinner_2.getValue());
 			
-			for (int i = 0; i < resultsTableModel.getRowCount(); i++) {
-				resultsTableModel.removeRow(i);
+			while (resultsTableModel.getRowCount() > 0) {
+				resultsTableModel.removeRow(0);
 			}
-			
 			for (int i = 0; i < topics.size(); i++) {
-				resultsTableModel.addRow(new Object[]{topics.get(i).getName(), topics.get(i).getAmountQuestions(), topics.get(i).getAmountChosen()});
+				resultsTableModel.addRow(new Object[]{topics.get(i).getName(), topics.get(i).getAmountQuestions(), topics.get(i).getAmountChosen(), Math.round(topics.get(i).getPercentage() * 10.0) / 10.0 + " %"});
 			}
 		}
 	}

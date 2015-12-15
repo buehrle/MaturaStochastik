@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class MathUtils {
-	
-	
 	/**
 	 * 
 	 * @param topics The ArrayList of topics that will be modified and used for this method
@@ -24,23 +22,42 @@ public class MathUtils {
 				Topic topic1 = topics.get(r.nextInt(topics.size()));
 				Topic topic2 = topics.get(r.nextInt(topics.size()));
 				
-				r = new Random();
+				r = new Random(r.nextLong());
 				
 				int popularitySum = topic1.getPopularity() + topic2.getPopularity();
 				int randomChosen = r.nextInt(popularitySum);
 				
 				if (randomChosen <= topic1.getPopularity()) {
 					topic1.setAmountChosen(topic1.getAmountChosen() + 1);
-					topic1.getChosenPerIteration()[i]++;
+					topic1.incrementChosenPerIteration(i, 1);
 				} else {
 					topic2.setAmountChosen(topic2.getAmountChosen() + 1);
-					topic2.getChosenPerIteration()[i]++;
+					topic2.incrementChosenPerIteration(i, 1);
 				}
 			}
 		}
 		
 		for (Topic t : topics) {
-
+			int[] topicCounter = new int[participants + 1];
+			
+			for (int i = 0; i < iterations; i++) {
+				topicCounter[t.getChosenPerIteration()[i]]++;
+			}
+			
+			double topicIterator = 0;
+			
+			for (int i = 0; i <= participants; i++) {
+				topicIterator += topicCounter[i];
+				
+				double percentageL = (topicIterator / iterations) * 100;
+				if (percentageL >= percentage) {
+					t.setAmountQuestions(i);
+					t.setPercentage(percentageL);
+					break;
+				}
+			}
+			
+			//t.setAmountQuestions(participants);
 		}
 	}
 }
