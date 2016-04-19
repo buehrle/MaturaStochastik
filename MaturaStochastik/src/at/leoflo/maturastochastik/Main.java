@@ -12,6 +12,7 @@ import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox.KeySelectionManager;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -55,11 +56,11 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 	public Main() {
 		BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
 		borderLayout.setHgap(5);
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); //make it look beautiful.
-		} catch (Exception e) {}
-		
-		setTitle("Stochastische Berechnung für die Verteilung der Maturafragen | HTL Dornbirn");
+//		try {
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); //make it look beautiful.
+//		} catch (Exception e) {}
+//		
+		setTitle("Stochastische Berechnung fÃ¼r die Verteilung der Maturafragen | HTL Dornbirn");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
 		setSize(912, 414);
@@ -89,7 +90,7 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		getContentPane().add(dataContainer, BorderLayout.NORTH);
 		dataContainer.setLayout(new MigLayout("", "[][][][][][][][][][][grow][][][][][][][][][]", "[grow]"));
 		
-		JLabel lblAnzahlDerSchler = new JLabel("Anzahl Schüler");
+		JLabel lblAnzahlDerSchler = new JLabel("Anzahl SchÃ¼ler");
 		dataContainer.add(lblAnzahlDerSchler, "cell 0 0");
 		
 		spinner = new JSpinner();
@@ -97,7 +98,7 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		spinner.setMinimumSize(new Dimension(60, 0));
 		dataContainer.add(spinner, "cell 1 0");
 		
-		lblDurchgngegenauigkeit = new JLabel("Durchgänge (Genauigkeit)");
+		lblDurchgngegenauigkeit = new JLabel("DurchgÃ¤nge (Genauigkeit)");
 		dataContainer.add(lblDurchgngegenauigkeit, "cell 3 0");
 		
 		spinner_1 = new JSpinner();
@@ -151,12 +152,12 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 				try {
 					new Robot().keyPress(KeyEvent.VK_LEFT);
 				} catch (AWTException e1) {}
-			} else if (e.getKeyCode() == 127) { //DEL
+			} else if (e.getKeyCode() == 127 || e.getKeyCode() == 92) { //DEL
 				if (table.getRowCount() > 1) topicsTableModel.removeRow(table.getSelectedRow());
-			} else if (e.getKeyCode() == 8) { //BACK
-				
 			}
 		}
+		
+		//btnBerechnen.setText(Integer.toString(e.getKeyCode()));
 	}
 
 	@Override
