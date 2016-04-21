@@ -48,6 +48,8 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 	private JScrollPane scrollPane_1;
 	private JTable table_1;
 	private JPanel panel;
+	private JPanel pollContainer;
+	private JButton btnStartPoll;
 	
 	public static void main(String[] args) {
 		new Main();
@@ -141,6 +143,14 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		table_1.setFillsViewportHeight(true);
 		table_1.setRowHeight(20);
 		scrollPane_1.setViewportView(table_1);
+		
+		pollContainer = new JPanel();
+		getContentPane().add(pollContainer, BorderLayout.SOUTH);
+		pollContainer.setLayout(new MigLayout("", "[127px]", "[25px]"));
+		
+		btnStartPoll = new JButton("Umfrage Starten");
+		btnStartPoll.addActionListener(this);
+		pollContainer.add(btnStartPoll, "cell 0 0,alignx left,aligny top");
 		setVisible(true);
 	}
 
@@ -195,6 +205,8 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 			for (int i = 0; i < topics.size(); i++) {
 				resultsTableModel.addRow(new Object[]{topics.get(i).getName(), topics.get(i).getAmountQuestions(), topics.get(i).getAmountChosen(), Math.round(topics.get(i).getPercentage() * 10.0) / 10.0 + " %"});
 			}
+		} else if (e.getSource() == btnStartPoll) {
+			
 		}
 	}
 }
