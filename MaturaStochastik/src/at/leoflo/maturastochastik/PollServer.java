@@ -6,17 +6,17 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 
-public class PollServer {
+public class PollServer extends Thread {
 	private ServerSocket serverSocket;
 	private ExecutorService executor;
 	private ArrayList<Client> clients;
-	private Thread serverThread;
 	
-	public PollServer() {
+	public PollServer(int port) {
 		try {
-			serverSocket = new ServerSocket(69691);
+			serverSocket = new ServerSocket(port);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to open port.");
 		}
@@ -25,28 +25,26 @@ public class PollServer {
 		clients = new ArrayList<Client>();
 	}
 	
-	public void startServer() {
-		if(serverThread == null ? false : serverThread.isAlive()) {
-			throw new RuntimeException("Server already running!");
-		}
-		
-		serverThread = new Thread(() -> {
-			while (!Thread.currentThread().isInterrupted()) {
-				try {
-					Socket clientSocket = serverSocket.accept(); //waits for a connection
-					Client client = new Client(clientSocket);
-				} catch (Exception e) {
-					e.printStackTrace();
-				} 
+	@Override
+	public void run() { // Waits for new clients
+		while (!Thread.currentThread().isInterrupted()) {
+			try {
+				Socket clientSocket = serverSocket.accept();
+				Client client = new Client(clientSocket);
 				
+				clients.add(client);
+				executor.execute(client);
+			} catch (IOException e) {
+				System.err.println("Error while accepting client.");
 			}
-		});
-		
-		serverThread.start();
+		}
 	}
 	
-	public void requestShutdown() {
-		if (serverThread != null) serverThread.interrupt();
+	@Override
+	public void interrupt() {
+		super.interrupt();
+		
+		// Disconnect all clients
 	}
 	
 }
