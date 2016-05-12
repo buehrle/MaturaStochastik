@@ -14,6 +14,8 @@ public class Client implements Runnable, RequestTable {
 	private static final int MAX_COUNTS_UNTIL_TIMEOUT = 100;
 	private static final int SLEEPING_TIME = 10;
 	
+	private static ArrayList<Client> clients;
+	
 	private Socket clientSocket;
 	private int timeoutCounter;
 	
@@ -29,6 +31,10 @@ public class Client implements Runnable, RequestTable {
 	
 	private final Random random;
 	
+	static {
+		clients = new ArrayList<Client>();
+	}
+	
 	public Client(Socket clientSocket, HashMap<Integer, String> topics, PollCoordinator coordinator, int relapseTime) {
 		this.clientSocket = clientSocket;
 		this.topics = topics;
@@ -41,6 +47,12 @@ public class Client implements Runnable, RequestTable {
 		
 		random = new Random();
 		currentlyOpenTopics = new int[2];
+		
+		getClientList().add(this); // Client adds itself to the global list
+		
+		synchronized (coordinator) { // Thread-safety
+			coordinator.clientCountUpdate(getClientList().size());
+		}
 	}
 
 	@Override
@@ -64,8 +76,10 @@ public class Client implements Runnable, RequestTable {
 						switch (request) {
 							case SELECTION_COMPLETED:
 								int selected = input.readInt();
-								// TODO check if selected topic is allowed
-								coordinator.topicIncreased(selected);
+								// check if selected topic is allowed
+								synchronized (coordinator) {
+									if (currentlyOpenTopics[0] == selected || currentlyOpenTopics[1] == selected) coordinator.topicIncreased(selected);
+								}
 								
 								send2Topics();
 								
@@ -105,7 +119,11 @@ public class Client implements Runnable, RequestTable {
 				clientSocket.close();
 			} catch (IOException e) {
 			} finally {
-				// TODO unregister client from server!!
+				getClientList().remove(this);
+				
+				synchronized (coordinator) {
+					coordinator.clientCountUpdate(getClientList().size());
+				}
 			}
 		}
 	}
@@ -116,7 +134,7 @@ public class Client implements Runnable, RequestTable {
 		currentlyOpenTopics[0] = keys.get(random.nextInt(keys.size()));
 		currentlyOpenTopics[1] = keys.get(random.nextInt(keys.size()));
 		
-		output.writeInt(UPDATE_POLL_DATA);
+		output.writeInt(UPDATE_POLL_DATA); // Tell the client that 
 		
 		output.writeInt(currentlyOpenTopics[0]);
 		output.writeString(topics.get(currentlyOpenTopics[0]));
@@ -136,5 +154,9 @@ public class Client implements Runnable, RequestTable {
 
 	private void performShutdown() {
 		Thread.currentThread().interrupt();
+	}
+	
+	public static synchronized ArrayList<Client> getClientList() { // Prevent ugly thread conflicts.
+		return clients;
 	}
 }

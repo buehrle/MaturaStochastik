@@ -3,17 +3,13 @@ package at.leoflo.maturastochastik.networking;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
-
 
 public class PollServer extends Thread {
 	private ServerSocket serverSocket;
 	private ExecutorService executor;
-	private ArrayList<Client> clients;
 	private HashMap<Integer, String> topics;
 	private PollCoordinator coordinator;
 	private final int relapseTime;
@@ -23,7 +19,6 @@ public class PollServer extends Thread {
 			serverSocket = new ServerSocket(port);
 			
 			executor = Executors.newCachedThreadPool();
-			clients = new ArrayList<Client>();
 			
 			this.topics = topics;
 			this.relapseTime = relapseTime;
@@ -39,7 +34,6 @@ public class PollServer extends Thread {
 				Socket clientSocket = serverSocket.accept();
 				Client client = new Client(clientSocket, topics, coordinator, relapseTime);
 				
-				clients.add(client);
 				executor.execute(client);
 			} catch (IOException e) {
 				System.err.println("Error while accepting client.");
@@ -51,7 +45,7 @@ public class PollServer extends Thread {
 	public void interrupt() {
 		super.interrupt();
 		
-		// Disconnect all clients
+		executor.shutdownNow();
 	}
 	
 }
