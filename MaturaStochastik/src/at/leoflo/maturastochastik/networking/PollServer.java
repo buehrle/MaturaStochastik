@@ -32,7 +32,7 @@ public class PollServer extends Thread {
 		while (!Thread.currentThread().isInterrupted()) {
 			try {
 				Socket clientSocket = serverSocket.accept();
-				Client client = new Client(clientSocket, topics, coordinator, relapseTime);
+				ClientManager client = new ClientManager(clientSocket, topics, coordinator, relapseTime);
 				
 				executor.execute(client);
 			} catch (IOException e) {
