@@ -2,27 +2,36 @@ package at.leoflo.maturastochastik.networking;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import at.leoflo.maturastochastik.networking.streams.CompositeInputStream;
 import at.leoflo.maturastochastik.networking.streams.CompositeOutputStream;
 
-public class Client extends Thread implements RequestTable{
+public class Client extends Thread implements RequestTable {
 	
-	Socket clientSocket;
+	private Socket clientSocket;
 	
 	private CompositeInputStream input;
 	private CompositeOutputStream output;
 	
-	private Integer[] receivedID;
+	private int[] receivedID;
 	private String[] receivedTopicString;
 	
 	private int relapseTime;
+
+	private ClientCommunicator cc;
 	
-	public Client(Socket clientSocket) {
-		
-		this.clientSocket = clientSocket;
+	public Client(String address, ClientCommunicator cc) {
+		try {
+			this.clientSocket = new Socket(address, 10000);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		this.cc = cc;
 		
 	}
 	
@@ -52,15 +61,17 @@ public class Client extends Thread implements RequestTable{
 							
 							receivedID[1] = input.readInt();
 							receivedTopicString[1] = input.readString();
-							output.flush();
+
+							cc.updateQuestions(receivedID, receivedTopicString);
 						
 						break;
+						
 						case SERVER_CLOSED:
 							this.interrupt();
 							System.err.println("Server Closed - Disconnecting");
 							break;
 						case TIME_RELAPSE:
-							//this.
+							cc.resetTimer();
 							break;
 						case UNEXPECTED_ERROR:
 							this.interrupt();
@@ -98,6 +109,8 @@ public class Client extends Thread implements RequestTable{
 			
 			relapseTime = input.readInt();
 			
+			cc.connected();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -107,8 +120,19 @@ public class Client extends Thread implements RequestTable{
 		try {
 			input.close();
 			output.close();
+			
+			cc.disconnected();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public int getRelapseTime() {
+		return relapseTime;
+	}
+
+	public void setRelapseTime(int relapseTime) {
+		this.relapseTime = relapseTime;
 	}
 }
