@@ -134,7 +134,7 @@ public class ClientManager implements Runnable, RequestTable {
 		currentlyOpenTopics[0] = keys.get(random.nextInt(keys.size()));
 		currentlyOpenTopics[1] = keys.get(random.nextInt(keys.size()));
 		
-		output.writeInt(UPDATE_POLL_DATA); // Tell the client that 
+		output.writeInt(UPDATE_POLL_DATA); // Tell the client that we now send the poll data
 		
 		output.writeInt(currentlyOpenTopics[0]);
 		output.writeString(topics.get(currentlyOpenTopics[0]));
