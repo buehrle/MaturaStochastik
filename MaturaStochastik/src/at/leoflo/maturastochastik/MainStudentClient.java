@@ -1,9 +1,9 @@
 package at.leoflo.maturastochastik;
 
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.Socket;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -16,7 +16,6 @@ import at.leoflo.maturastochastik.networking.Client;
 import at.leoflo.maturastochastik.networking.ClientCommunicator;
 import at.leoflo.maturastochastik.swing.ProgressCircleUI;
 import net.miginfocom.swing.MigLayout;
-import java.awt.Color;
 
 public class MainStudentClient extends JFrame implements ClientCommunicator, ActionListener {
 
@@ -85,26 +84,8 @@ public class MainStudentClient extends JFrame implements ClientCommunicator, Act
 		contentPane.add(panel, "cell 0 3 3 1,grow");
 	
 		
-		new Client("10.51.50.22", this);
-		
-		
-		new Thread(() -> {
-			counter = 0;
-			
-			while (relapseTime != 0) {
-				progressBar.setValue(counter);
-				progressBar.repaint();
-				try {
-					Thread.sleep(10);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				counter += 1000 / relapseTime;
-				counter %= 1000;
-			}
-		}).start();
+		connection = new Client("127.0.0.1", this);
+		connection.start();
 	}
 
 	@Override

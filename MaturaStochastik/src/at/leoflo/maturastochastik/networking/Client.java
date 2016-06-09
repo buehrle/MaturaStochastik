@@ -25,7 +25,11 @@ public class Client extends Thread implements RequestTable {
 	
 	public Client(String address, ClientCommunicator cc) {
 		try {
+			System.out.println("Connecting");
 			this.clientSocket = new Socket(address, 10000);
+			
+			receivedID = new int[2];
+			receivedTopicString = new String[2];
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -44,14 +48,8 @@ public class Client extends Thread implements RequestTable {
 		try {
 			
 			while(!Thread.currentThread().isInterrupted()) {
-				
-				Thread.sleep(50);
-				output.write(HEARTBEAT);
-				output.flush();
-				
-				
 				if (input.available() > 0) {
-					int request = input.read();
+					int request = input.readInt();
 				
 					switch (request) {
 						case UPDATE_POLL_DATA:
@@ -63,7 +61,7 @@ public class Client extends Thread implements RequestTable {
 							receivedTopicString[1] = input.readString();
 
 							cc.updateQuestions(receivedID, receivedTopicString);
-						
+							System.out.println(receivedTopicString);
 						break;
 						
 						case SERVER_CLOSED:
@@ -83,6 +81,10 @@ public class Client extends Thread implements RequestTable {
 							break;
 					}
 				}
+				
+				Thread.sleep(50);
+				//output.write(HEARTBEAT);
+				//output.flush();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -94,6 +96,7 @@ public class Client extends Thread implements RequestTable {
 	public void sendResult(int selectedID) {
 		try {
 			output.writeInt(SELECTION_COMPLETED);
+			output.flush();
 			output.writeInt(selectedID);
 			output.flush();
 		} catch (IOException e) {
@@ -108,7 +111,7 @@ public class Client extends Thread implements RequestTable {
 			output = new CompositeOutputStream(clientSocket.getOutputStream(), StandardCharsets.UTF_8);
 			
 			relapseTime = input.readInt();
-			
+			System.out.println(relapseTime);
 			cc.connected();
 			
 		} catch (IOException e) {

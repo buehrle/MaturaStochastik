@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox.KeySelectionManager;
@@ -26,10 +27,12 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
+import at.leoflo.maturastochastik.networking.PollCoordinator;
+import at.leoflo.maturastochastik.networking.PollServer;
 import net.miginfocom.swing.MigLayout;
 
 @SuppressWarnings("serial")
-public class Main extends JFrame implements KeyListener, ActionListener {
+public class Main extends JFrame implements KeyListener, ActionListener, PollCoordinator {
 	private static final String[] topicsColumnNames = {"Bezeichnung", "Beliebtheit"};
 	private static final String[] resultsColumnNames = {"Themenbereich", "Anzahl Fragen", "insgesamt Gezogen", "Sicherheit"};
 	private DefaultTableModel topicsTableModel;
@@ -50,6 +53,12 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 	private JPanel panel;
 	private JPanel pollContainer;
 	private JButton btnStartPoll;
+	private JLabel lblZeitProAuswahl;
+	private JSpinner spinner_3;
+	private JLabel lblVerbundeneSchler;
+	private JLabel label_1;
+	
+	private PollServer server;
 	
 	public static void main(String[] args) {
 		new Main();
@@ -58,10 +67,10 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 	public Main() {
 		BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
 		borderLayout.setHgap(5);
-//		try {
-//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); //make it look beautiful.
-//		} catch (Exception e) {}
-//		
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); //make it look beautiful.
+		} catch (Exception e) {}
+		
 		setTitle("Stochastische Berechnung für die Verteilung der Maturafragen | HTL Dornbirn");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
@@ -146,12 +155,28 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 		
 		pollContainer = new JPanel();
 		getContentPane().add(pollContainer, BorderLayout.SOUTH);
-		pollContainer.setLayout(new MigLayout("", "[127px]", "[25px]"));
+		pollContainer.setLayout(new MigLayout("", "[127px][][][]", "[25px][][]"));
 		
-		btnStartPoll = new JButton("Umfrage Starten");
+		btnStartPoll = new JButton("Umfrage starten");
 		btnStartPoll.addActionListener(this);
 		pollContainer.add(btnStartPoll, "cell 0 0,alignx left,aligny top");
+		
+		lblZeitProAuswahl = new JLabel("Zeit pro Auswahl [s]");
+		pollContainer.add(lblZeitProAuswahl, "cell 2 0");
+		
+		spinner_3 = new JSpinner();
+		spinner_3.setModel(new SpinnerNumberModel(new Integer(10), new Integer(1), null, new Integer(1)));
+		spinner_3.setMinimumSize(new Dimension(100, 0));
+		pollContainer.add(spinner_3, "cell 3 0");
+		
+		lblVerbundeneSchler = new JLabel("Verbundene Schüler:");
+		pollContainer.add(lblVerbundeneSchler, "cell 0 2");
+		
+		label_1 = new JLabel("0");
+		pollContainer.add(label_1, "cell 1 2");
 		setVisible(true);
+		
+		server = null;
 	}
 
 	@Override
@@ -206,7 +231,44 @@ public class Main extends JFrame implements KeyListener, ActionListener {
 				resultsTableModel.addRow(new Object[]{topics.get(i).getName(), topics.get(i).getAmountQuestions(), topics.get(i).getAmountChosen(), Math.round(topics.get(i).getPercentage() * 10.0) / 10.0 + " %"});
 			}
 		} else if (e.getSource() == btnStartPoll) {
-			
+			if (server == null) {
+				
+				if (topicsTableModel.getRowCount() > 1) {
+					btnStartPoll.setText("Umfrage beenden");
+					spinner_3.setEnabled(false);
+					table.setEnabled(false);
+					
+					server = new PollServer(10000, hashMapFromTopics(), this, (Integer) spinner_3.getValue());
+					server.start();
+				}
+			} else {
+				btnStartPoll.setText("Umfrage starten");
+				spinner_3.setEnabled(true);
+				table.setEnabled(true);
+				
+				server.interrupt();
+				server = null;
+			}
 		}
+	}
+
+	@Override
+	public void topicIncreased(int topic) {
+		topicsTableModel.setValueAt((Integer)topicsTableModel.getValueAt(topic, 1) + 1, topic, 1);
+	}
+
+	@Override
+	public void clientCountUpdate(int count) {
+		label_1.setText(String.valueOf(count));
+	}
+	
+	private HashMap<Integer, String> hashMapFromTopics() {
+		HashMap<Integer, String> temp = new HashMap<Integer, String>();
+		
+		for (int i = 0; i < topicsTableModel.getRowCount(); i++) {
+			temp.put(i, (String) topicsTableModel.getValueAt(i, 0));
+		}
+		
+		return temp;
 	}
 }

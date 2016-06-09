@@ -36,22 +36,32 @@ public class ClientManager implements Runnable, RequestTable {
 	}
 	
 	public ClientManager(Socket clientSocket, HashMap<Integer, String> topics, PollCoordinator coordinator, int relapseTime) {
-		this.clientSocket = clientSocket;
-		this.topics = topics;
-		this.coordinator = coordinator;
+		boolean contains = false;
 		
-		this.relapseTime = relapseTime;
+		for (ClientManager clTemp : clients) {
+			contains = (clTemp.clientSocket.getInetAddress() == clientSocket.getInetAddress());
+		}
 		
-		timeoutCounter = 0;
-		relapseCounter = 0;
-		
-		random = new Random();
-		currentlyOpenTopics = new int[2];
-		
-		getClientList().add(this); // Client adds itself to the global list
-		
-		synchronized (coordinator) { // Thread-safety
-			coordinator.clientCountUpdate(getClientList().size());
+		if (!contains) {
+			this.clientSocket = clientSocket;
+			this.topics = topics;
+			this.coordinator = coordinator;
+			
+			this.relapseTime = relapseTime;
+			
+			timeoutCounter = 0;
+			relapseCounter = 0;
+			
+			random = new Random();
+			currentlyOpenTopics = new int[2];
+			
+			getClientList().add(this); // Client adds itself to the global list
+			
+			synchronized (coordinator) { // Thread-safety
+				coordinator.clientCountUpdate(getClientList().size());
+			}
+		} else {
+			throw new AlreadyLoggedInException();
 		}
 	}
 
@@ -62,7 +72,7 @@ public class ClientManager implements Runnable, RequestTable {
 			
 			while(!Thread.currentThread().isInterrupted()) {
 				if (timeoutCounter < MAX_COUNTS_UNTIL_TIMEOUT) {
-					if (relapseCounter > relapseTime / SLEEPING_TIME) { //Time exceeded!
+					if (relapseCounter > (relapseTime * 1000) / SLEEPING_TIME) { //Time exceeded!
 						output.writeInt(TIME_RELAPSE);
 						
 						send2Topics();
@@ -89,6 +99,7 @@ public class ClientManager implements Runnable, RequestTable {
 								performShutdown();
 								break;
 							case HEARTBEAT:
+								System.out.println("Heartbeat");
 								break;
 							default:
 								output.writeInt(ILLEGAL_REQUEST);
@@ -135,12 +146,16 @@ public class ClientManager implements Runnable, RequestTable {
 		currentlyOpenTopics[1] = keys.get(random.nextInt(keys.size()));
 		
 		output.writeInt(UPDATE_POLL_DATA); // Tell the client that we now send the poll data
-		
+		output.flush();
 		output.writeInt(currentlyOpenTopics[0]);
+		output.flush();
 		output.writeString(topics.get(currentlyOpenTopics[0]));
-		
+		output.flush();
 		output.writeInt(currentlyOpenTopics[1]);
+		output.flush();
 		output.writeString(topics.get(currentlyOpenTopics[1]));
+		
+		output.flush();
 	}
 	
 	private void init() throws IOException {
@@ -148,8 +163,10 @@ public class ClientManager implements Runnable, RequestTable {
 		output = new CompositeOutputStream(clientSocket.getOutputStream(), StandardCharsets.UTF_8);
 		
 		output.writeInt(relapseTime); // Time in seconds until relapse
+		output.flush();
 		
 		send2Topics();
+		
 	}
 
 	private void performShutdown() {

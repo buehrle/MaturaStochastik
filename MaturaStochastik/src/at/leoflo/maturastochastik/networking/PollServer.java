@@ -22,6 +22,8 @@ public class PollServer extends Thread {
 			
 			this.topics = topics;
 			this.relapseTime = relapseTime;
+			
+			this.coordinator = coordinator;
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to open port.");
 		}
@@ -29,12 +31,16 @@ public class PollServer extends Thread {
 	
 	@Override
 	public void run() { // Waits for new clients
-		while (!Thread.currentThread().isInterrupted()) {
+		while (!Thread.currentThread().isInterrupted() && !serverSocket.isClosed()) {
 			try {
 				Socket clientSocket = serverSocket.accept();
 				ClientManager client = new ClientManager(clientSocket, topics, coordinator, relapseTime);
 				
 				executor.execute(client);
+				
+				System.out.println("Accepted");
+			} catch (AlreadyLoggedInException alie) {
+				System.err.println("CLIENT IST BEREITS EINGELOGGT! ALARM! ALARM!");
 			} catch (IOException e) {
 				System.err.println("Error while accepting client.");
 			}
@@ -46,6 +52,13 @@ public class PollServer extends Thread {
 		super.interrupt();
 		
 		executor.shutdownNow();
+		
+		try {
+			serverSocket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 }
