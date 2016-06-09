@@ -254,7 +254,16 @@ public class Main extends JFrame implements KeyListener, ActionListener, PollCoo
 
 	@Override
 	public void topicIncreased(int topic) {
-		topicsTableModel.setValueAt((Integer)topicsTableModel.getValueAt(topic, 1) + 1, topic, 1);
+		Object valueAt = topicsTableModel.getValueAt(topic, 1);
+		
+		if (valueAt != null) {
+			topicsTableModel.setValueAt((Integer) valueAt + 1, topic, 1);
+		} else {
+			topicsTableModel.setValueAt(1, topic, 1);
+		}
+		
+		
+		System.out.println("Inkreased: " + topic);
 	}
 
 	@Override

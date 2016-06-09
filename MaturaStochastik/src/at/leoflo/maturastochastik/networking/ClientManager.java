@@ -99,9 +99,10 @@ public class ClientManager implements Runnable, RequestTable {
 								performShutdown();
 								break;
 							case HEARTBEAT:
-								System.out.println("Heartbeat");
+								//System.out.println("Heartbeat");
 								break;
 							default:
+								System.out.println(request);
 								output.writeInt(ILLEGAL_REQUEST);
 								performShutdown();
 								break;
@@ -120,6 +121,7 @@ public class ClientManager implements Runnable, RequestTable {
 				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			try {
 				output.writeInt(UNEXPECTED_ERROR);
 			} catch (Exception e1) {}
@@ -128,7 +130,10 @@ public class ClientManager implements Runnable, RequestTable {
 				input.close();
 				output.close();
 				clientSocket.close();
+				
+				System.out.println("Client disconnected");
 			} catch (IOException e) {
+				e.printStackTrace();
 			} finally {
 				getClientList().remove(this);
 				
@@ -142,8 +147,14 @@ public class ClientManager implements Runnable, RequestTable {
 	public void send2Topics() throws IOException {
 		ArrayList<Integer> keys = new ArrayList<Integer>(topics.keySet());
 		
-		currentlyOpenTopics[0] = keys.get(random.nextInt(keys.size()));
-		currentlyOpenTopics[1] = keys.get(random.nextInt(keys.size()));
+		int rand;
+		int rand2;
+		
+		currentlyOpenTopics[0] = keys.get(rand = random.nextInt(keys.size()));
+		
+		while ((rand2 = random.nextInt(keys.size())) == rand);
+		
+		currentlyOpenTopics[1] = keys.get(rand2);
 		
 		output.writeInt(UPDATE_POLL_DATA); // Tell the client that we now send the poll data
 		output.flush();

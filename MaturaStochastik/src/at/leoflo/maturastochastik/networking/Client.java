@@ -23,18 +23,14 @@ public class Client extends Thread implements RequestTable {
 
 	private ClientCommunicator cc;
 	
-	public Client(String address, ClientCommunicator cc) {
-		try {
-			System.out.println("Connecting");
-			this.clientSocket = new Socket(address, 10000);
-			
-			receivedID = new int[2];
-			receivedTopicString = new String[2];
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public Client(String address, ClientCommunicator cc) throws UnknownHostException, IOException {
+
+		System.out.println("Connecting");
+		this.clientSocket = new Socket(address, 10000);
+		
+		receivedID = new int[2];
+		receivedTopicString = new String[2];
+
 		this.cc = cc;
 		
 	}
@@ -61,8 +57,8 @@ public class Client extends Thread implements RequestTable {
 							receivedTopicString[1] = input.readString();
 
 							cc.updateQuestions(receivedID, receivedTopicString);
-							System.out.println(receivedTopicString);
-						break;
+							cc.resetTimer();
+							break;
 						
 						case SERVER_CLOSED:
 							this.interrupt();
@@ -83,8 +79,12 @@ public class Client extends Thread implements RequestTable {
 				}
 				
 				Thread.sleep(50);
-				//output.write(HEARTBEAT);
-				//output.flush();
+				
+				synchronized (this) {
+					output.writeInt(HEARTBEAT);
+					output.flush();
+				}
+				
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -93,12 +93,14 @@ public class Client extends Thread implements RequestTable {
 		}
 	}
 	
-	public void sendResult(int selectedID) {
+	public synchronized void sendResult(int selectedID) {
 		try {
 			output.writeInt(SELECTION_COMPLETED);
 			output.flush();
 			output.writeInt(selectedID);
 			output.flush();
+			
+			System.out.println("SELECTION");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
